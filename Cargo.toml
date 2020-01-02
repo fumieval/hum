@@ -1,0 +1,8 @@
+[package]
+name = "hum"
+version = "0.1.0"
+authors = ["Fumiaki Kinoshita <fumiexcel@gmail.com>"]
+
+[dependencies]
+winit = "0.20.0-alpha5"
+vst = { path = "../vst-rs" }
