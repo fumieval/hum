@@ -6,20 +6,11 @@ use std::error::Error;
 use std::path::Path;
 use std::process;
 use std::sync::{Arc, Mutex};
-use std::thread;
-use std::time;
 use std::ffi;
 
 use vst::host::{Host, PluginLoader};
 use vst::plugin::Plugin;
-use winit::platform::macos::WindowExtMacOS;
-
-use winit::{
-    event::{Event, WindowEvent},
-    event_loop::{ControlFlow, EventLoop},
-    window::WindowBuilder,
-};
-
+use winit::os::macos::{WindowExt};
 
 #[allow(dead_code)]
 struct SampleHost;
@@ -69,29 +60,35 @@ fn main() {
     instance.init();
     println!("Initialized instance!");
 
-    let event_loop = EventLoop::new();
-    let window = WindowBuilder::new().build(&event_loop).unwrap();
+    let mut events_loop = winit::EventsLoop::new();
+    let window = winit::Window::new(&events_loop).unwrap();
 
-    let parent : *mut ffi::c_void = window.ns_view();
+    let parent : *mut ffi::c_void = window.get_nsview();
 
-    match instance.get_editor() {
-        None => println!("No editor found"),
-        Some(mut editor) => {
+    match instance.get_editor()
+    {
+        Some(ref mut mutex_editor) => {
+            let mut editor = mutex_editor.lock().unwrap();
             let (width, height) = editor.size();
             window.set_inner_size(winit::dpi::LogicalSize { width: width as f64, height: height as f64 });
             if editor.open(parent)
-            { println!("Opening an editor for {}", info.name); }
-            else { println!("Failed to open an editor for {}", info.name) }
+            {
+                println!("Opening an editor for {}", info.name);
             }
+            else
+            {
+                println!("Failed to open an editor for {}", info.name)
+            }
+        }
+        None => println!("Editor not found")
     }
-
-    event_loop.run(move |event, _, control_flow| {
+    events_loop.run_forever(|event| {
         match event {
-            Event::WindowEvent {
-                event: WindowEvent::CloseRequested,
-                window_id,
-            } if window_id == window.id() => *control_flow = ControlFlow::Exit,
-            _ => *control_flow = ControlFlow::Wait,
+            winit::Event::WindowEvent {
+              event: winit::WindowEvent::CloseRequested,
+              ..
+            } => winit::ControlFlow::Break,
+            _ => winit::ControlFlow::Continue,
         }
     });
 }

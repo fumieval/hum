@@ -4,5 +4,5 @@ version = "0.1.0"
 authors = ["Fumiaki Kinoshita <fumiexcel@gmail.com>"]
 
 [dependencies]
-winit = "0.20.0-alpha5"
-vst = { path = "../vst-rs" }
+winit = "0.19.1"
+vst = { git = "https://github.com/fumieval/vst-rs" }
